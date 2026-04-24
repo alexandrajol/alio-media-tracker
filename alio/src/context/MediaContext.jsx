@@ -102,7 +102,7 @@ export const MediaProvider = ({ children }) => {
     },
     { 
       id: 15, title: 'The Office', type: 'TV Show', director: 'Greg Daniels', 
-      year: 2005, seasons: 9, rating: 4, watched: 'Continuous', 
+      year: 2005, seasons: 9, rating: 4, watched: '10.10.2012', 
       review: 'My comfort show.', genre: 'Sitcom',
       posterUrl: 'https://m.media-amazon.com/images/M/MV5BZjQwYzBlYzUtZjhhOS00ZDQ0LWE0NzAtYTk4MjgzZTNkZWEzXkEyXkFqcGc@._V1_QL75_UX190_CR0,2,190,281_.jpg' 
     }
