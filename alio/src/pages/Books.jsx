@@ -1,142 +1,74 @@
 import React, { useContext, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { MediaContext } from '../context/MediaContext';
+import MediaStats from '../components/MediaStats';
 
 export default function Books() {
-  // 1. Pull the data from your RAM State
   const { mediaItems } = useContext(MediaContext);
-
   const navigate = useNavigate();
 
-  // Filter to ensure we only show movies on this page
   const books = mediaItems.filter(item => item.type === 'Book');
 
-  // --- 2. Pagination Logic (Implementation Details) ---
+  // Pagination Logic
   const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 9; // Matches your 3x3 Figma design
-
+  const ITEMS_PER_PAGE = 6; 
   const totalPages = Math.ceil(books.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  
-  // This slices the array so we only show 9 items at a time
   const currentBooks = books.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
-  const handlePageChange = (pageNumber) => {
-    setCurrentPage(pageNumber);
-  };
-
-  // --- 3. Visual Rendering (Presentation) ---
   return (
-    <div style={containerStyle}>
-      {/* Top Bar with Add Button */}
-        <div style={headerStyle}>
-            <button onClick={() => navigate('/add')} style={addBtnStyle}>
-                Add a new Book
-            </button>
-        </div>
-
-      {/* The Master View: Grid of Posters */}
-      <div style={gridStyle}>
-        {currentBooks.map((books) => (
-          // Link wraps the poster to prepare for your Detail View routing!
-          <Link to={`/books/${books.id}`} key={books.id} style={cardStyle}>
-            <img 
-              src={books.posterUrl} 
-              alt={books.title} 
-              style={posterStyle} 
-            />
-          </Link>
-        ))}
+    <div style={pageContainer}>
+      <div style={headerStyle}>
+        <button onClick={() => navigate('/add')} style={addBtnStyle}>Add a new Book</button>
       </div>
 
-      {/* Pagination Controls */}
-      {totalPages > 0 && (
-        <div style={paginationStyle}>
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
-            <button
-              key={pageNum}
-              onClick={() => handlePageChange(pageNum)}
-              style={{
-                ...pageBtnStyle,
-                backgroundColor: currentPage === pageNum ? '#ffffff' : '#e0e0e0', // Highlight active page
-              }}
-            >
-              {pageNum}
-            </button>
-          ))}
+      <div style={splitLayout}>
+        {/* LEFT COLUMN: The Master Grid */}
+        <div style={leftColumn}>
+          <div style={gridStyle}>
+            {currentBooks.map((book) => (
+              <Link to={`/books/${book.id}`} key={book.id} style={cardStyle}>
+                <img src={book.posterUrl} alt={book.title} style={posterStyle} />
+              </Link>
+            ))}
+          </div>
+
+          {totalPages > 0 && (
+            <div style={paginationStyle}>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+                <button
+                  key={pageNum}
+                  onClick={() => setCurrentPage(pageNum)}
+                  style={{
+                    ...pageBtnStyle,
+                    backgroundColor: currentPage === pageNum ? '#ffffff' : '#e0e0e0',
+                  }}
+                >
+                  {pageNum}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
-      )}
+
+        {/* RIGHT COLUMN: The Interactive Statistics */}
+        <div style={rightColumn}>
+          <MediaStats data={books} type="Book" /> 
+        </div>
+      </div>
     </div>
   );
 }
 
-// --- Inline Styles matching Figma ---
-const containerStyle = {
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  padding: '2rem',
-  maxWidth: '1200px',
-  margin: '0 auto',
-};
-
-const headerStyle = {
-  width: '100%',
-  display: 'flex',
-  justifyContent: 'center',
-  marginBottom: '3rem',
-};
-
-const addBtnStyle = {
-  backgroundColor: '#ff6b81', // Matching your pink button
-  color: 'white',
-  border: 'none',
-  padding: '0.8rem 2rem',
-  borderRadius: '20px',
-  fontSize: '1rem',
-  cursor: 'pointer',
-  boxShadow: '0 4px 6px rgba(0,0,0,0.3)',
-};
-
-const gridStyle = {
-  display: 'grid',
-  gridTemplateColumns: 'repeat(3, 1fr)',
-  gap: '3rem',
-  marginBottom: '4rem',
-  width: '100%',
-};
-
-const cardStyle = {
-  display: 'block',
-  transition: 'transform 0.2s', // Hover effect
-  cursor: 'pointer',
-  textDecoration: 'none',
-};
-
-const posterStyle = {
-  width: '100%',
-  height: 'auto',
-  aspectRatio: '2 / 3', // Keeps standard movie poster dimensions
-  borderRadius: '15px',
-  boxShadow: '0 6px 12px rgba(0,0,0,0.4)',
-  objectFit: 'cover',
-};
-
-const paginationStyle = {
-  display: 'flex',
-  gap: '1rem',
-};
-
-const pageBtnStyle = {
-  width: '40px',
-  height: '40px',
-  borderRadius: '50%', // Perfect circles like your design
-  border: 'none',
-  fontSize: '1.2rem',
-  fontWeight: 'bold',
-  color: '#333',
-  cursor: 'pointer',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-};
+// --- Inline Styles ---
+const pageContainer = { padding: '2rem', maxWidth: '1400px', margin: '0 auto' };
+const headerStyle = { width: '100%', display: 'flex', justifyContent: 'flex-start', marginBottom: '2rem' };
+const addBtnStyle = { backgroundColor: '#ff6b81', color: 'white', border: 'none', padding: '0.8rem 2rem', borderRadius: '20px', fontSize: '1rem', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.3)' };
+const splitLayout = { display: 'flex', gap: '3rem', alignItems: 'flex-start' };
+const leftColumn = { flex: '2', display: 'flex', flexDirection: 'column', alignItems: 'center' }; 
+const rightColumn = { flex: '1', position: 'sticky', top: '100px' }; 
+const gridStyle = { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '2rem', width: '100%', marginBottom: '3rem' };
+const cardStyle = { display: 'block', transition: 'transform 0.2s', cursor: 'pointer', textDecoration: 'none' };
+const posterStyle = { width: '100%', height: 'auto', aspectRatio: '2 / 3', borderRadius: '15px', boxShadow: '0 6px 12px rgba(0,0,0,0.4)', objectFit: 'cover' };
+const paginationStyle = { display: 'flex', gap: '1rem', justifyContent: 'center' };
+const pageBtnStyle = { width: '40px', height: '40px', borderRadius: '50%', border: 'none', fontSize: '1.2rem', fontWeight: 'bold', color: '#333', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' };
