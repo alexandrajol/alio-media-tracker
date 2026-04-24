@@ -69,10 +69,10 @@ export default function MovieDetails() {
             <p>{item.review}</p>
           </div>
 
-          {/* Action Buttons */}
           <div style={buttonContainer}>
-            {/* We will wire up Edit later */}
-            <button style={editBtnStyle}>Edit</button>
+            <button onClick={() => navigate(`/edit/${item.id}`)} style={editBtnStyle}>
+              Edit
+            </button>
             <button onClick={handleDelete} style={deleteBtnStyle}>Delete</button>
           </div>
 

@@ -1,10 +1,12 @@
 import React, { useContext, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { MediaContext } from '../context/MediaContext';
 
 export default function TVShows() {
   // 1. Pull the data from your RAM State
   const { mediaItems } = useContext(MediaContext);
+
+  const navigate = useNavigate();
 
   // Filter to ensure we only show movies on this page
   const tvshows = mediaItems.filter(item => item.type === 'TV Show');
@@ -28,7 +30,10 @@ export default function TVShows() {
     <div style={containerStyle}>
       {/* Top Bar with Add Button */}
       <div style={headerStyle}>
-        <button style={addBtnStyle}>Add a new TV Show</button>
+        <button onClick={() => navigate('/add')} style={addBtnStyle}>
+            Add a new TV Show
+        </button>
+        
       </div>
 
       {/* The Master View: Grid of Posters */}

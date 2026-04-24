@@ -1,29 +1,44 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
-import Movies from './pages/Movies'; // <-- Import the new page
+import Movies from './pages/Movies';
 import Books from './pages/Books';
-import TVShows from './pages/TVShows';
+import Shows from './pages/TVShows';
 import MovieDetails from './pages/MovieDetails';
 import MediaForm from './pages/MediaForm';
+// New imports!
+import Login from './pages/Login';
+import SignUp from './pages/SignUp';
+import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
 
 function App() {
+  const location = useLocation();
+  // Hide the navbar on the login and signup pages
+  const hideNavbar = location.pathname === '/login' || location.pathname === '/signup';
+
   return (
     <div>
-      <Navbar />
+      {!hideNavbar && <Navbar />}
+      
       <div style={{ padding: '2rem' }}>
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/movies" element={<Movies />} /> 
-          <Route path="/books" element={<Books />} /> 
-          <Route path="/tvshows" element={<TVShows />} /> 
+          {/* Public Routes (Anyone can see these) */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<SignUp />} />
 
-          <Route path="/movies/:id" element={<MovieDetails />} />
-          <Route path="/books/:id" element={<MovieDetails />} />
-          <Route path="/tvshows/:id" element={<MovieDetails />} />
-
-          <Route path="/add" element={<MediaForm />} />
+          {/* Protected Routes (Must be logged in to see these!) */}
+          <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+          <Route path="/movies" element={<ProtectedRoute><Movies /></ProtectedRoute>} />
+          <Route path="/books" element={<ProtectedRoute><Books /></ProtectedRoute>} />
+          <Route path="/shows" element={<ProtectedRoute><Shows /></ProtectedRoute>} />
+          
+          <Route path="/movies/:id" element={<ProtectedRoute><MovieDetails /></ProtectedRoute>} />
+          <Route path="/books/:id" element={<ProtectedRoute><MovieDetails /></ProtectedRoute>} />
+          <Route path="/shows/:id" element={<ProtectedRoute><MovieDetails /></ProtectedRoute>} />
+          
+          <Route path="/add" element={<ProtectedRoute><MediaForm /></ProtectedRoute>} />
+          <Route path="/edit/:id" element={<ProtectedRoute><MediaForm /></ProtectedRoute>} />
         </Routes>
       </div>
     </div>
