@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { MediaContext } from '../context/MediaContext';
 
@@ -8,7 +8,6 @@ export default function MediaForm() {
   const { id } = useParams();
   const existingItem = id ? mediaItems.find(m => m.id === parseInt(id)) : null;
 
-  // Added "genre" to the default state!
   const defaultState = {
     title: '', type: 'Movie', genre: '', year: '', rating: '', review: '', watched: '',
     posterUrl: '', director: '', author: '', duration: '', pages: '', seasons: ''
@@ -19,6 +18,15 @@ export default function MediaForm() {
   );
 
   const [errors, setErrors] = useState({});
+
+  // --- RESPONSIVE STATE ---
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -36,12 +44,9 @@ export default function MediaForm() {
       newErrors.rating = 'Rating must be a number between 1 and 5.';
     }
 
-    // --- NEW: Date Watched Validation ---
-    // Only validate if they actually typed something (assuming the field is optional)
+    // Date Watched Validation (DD.MM.YYYY)
     if (formData.watched && formData.watched.trim() !== '') {
-      // Regex checks for DD.MM.YYYY format and basic valid numbers (e.g., month isn't 99)
       const dateRegex = /^(0[1-9]|[12][0-9]|3[01])\.(0[1-9]|1[012])\.\d{4}$/;
-      
       if (!dateRegex.test(formData.watched)) {
         newErrors.watched = 'Must be a valid date (DD.MM.YYYY).';
       }
@@ -86,16 +91,32 @@ export default function MediaForm() {
     }
   };
 
+  // --- DYNAMIC STYLES ---
+  const dynamicCardStyle = {
+    backgroundColor: '#343a40', 
+    padding: isMobile ? '2rem 1.5rem' : '3rem', // Less padding on mobile edges
+    borderRadius: '20px', 
+    width: '100%', 
+    maxWidth: '600px', 
+    boxShadow: '0 0 40px rgba(0,0,0,0.5)',
+  };
+
+  const dynamicTwoColStyle = {
+    display: 'flex',
+    flexDirection: isMobile ? 'column' : 'row', // Stack vertically on phones!
+    gap: '1rem',
+  };
+
   return (
     <div style={pageContainer}>
-      <div style={cardStyle}>
+      <div style={dynamicCardStyle}>
         <h2 style={{ textAlign: 'center', marginBottom: '2rem' }}>
           {existingItem ? 'Edit Media' : 'Add to Alio'}
         </h2>
         
         <form onSubmit={handleSubmit} style={formStyle}>
           
-          <div style={twoColStyle}>
+          <div style={dynamicTwoColStyle}>
             <div style={inputGroup}>
               <label style={labelStyle}>Type</label>
               <select name="type" value={formData.type} onChange={handleChange} style={inputStyle}>
@@ -105,7 +126,6 @@ export default function MediaForm() {
               </select>
             </div>
             
-            {/* THE NEW GENRE INPUT */}
             <div style={inputGroup}>
               <label style={labelStyle}>Genre</label>
               <input name="genre" placeholder="e.g. Comedy" value={formData.genre} onChange={handleChange} style={inputStyle} />
@@ -118,7 +138,7 @@ export default function MediaForm() {
             {errors.title && <span style={errorTextStyle}>{errors.title}</span>}
           </div>
 
-          <div style={twoColStyle}>
+          <div style={dynamicTwoColStyle}>
             <div style={inputGroup}>
               <label style={labelStyle}>Release Year</label>
               <input name="year" placeholder="e.g. 1987" value={formData.year} onChange={handleChange} style={inputStyle} />
@@ -132,7 +152,7 @@ export default function MediaForm() {
           </div>
 
           {formData.type === 'Book' ? (
-            <div style={twoColStyle}>
+            <div style={dynamicTwoColStyle}>
               <div style={inputGroup}>
                 <label style={labelStyle}>Author</label>
                 <input name="author" value={formData.author || ''} onChange={handleChange} style={inputStyle} />
@@ -143,7 +163,7 @@ export default function MediaForm() {
               </div>
             </div>
           ) : (
-            <div style={twoColStyle}>
+            <div style={dynamicTwoColStyle}>
               <div style={inputGroup}>
                 <label style={labelStyle}>Director</label>
                 <input name="director" value={formData.director || ''} onChange={handleChange} style={inputStyle} />
@@ -164,17 +184,10 @@ export default function MediaForm() {
             </div>
           )}
 
-          <div style={twoColStyle}>
+          <div style={dynamicTwoColStyle}>
             <div style={inputGroup}>
               <label style={labelStyle}>Date Watched/Read</label>
-              <input 
-                name="watched" 
-                placeholder="DD.MM.YYYY" 
-                value={formData.watched || ''} 
-                onChange={handleChange} 
-                style={inputStyle} 
-              />
-              {/* --- NEW: Show the error message if the date is invalid --- */}
+              <input name="watched" placeholder="DD.MM.YYYY" value={formData.watched || ''} onChange={handleChange} style={inputStyle} />
               {errors.watched && <span style={errorTextStyle}>{errors.watched}</span>}
             </div>
             <div style={inputGroup}>
@@ -197,12 +210,10 @@ export default function MediaForm() {
   );
 }
 
-// --- Inline Styles ---
-const pageContainer = { display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh', padding: '2rem' };
-const cardStyle = { backgroundColor: '#343a40', padding: '3rem', borderRadius: '20px', width: '100%', maxWidth: '600px', boxShadow: '0 0 40px rgba(0,0,0,0.5)' };
+// --- STATIC INLINE STYLES ---
+const pageContainer = { display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh', padding: '2rem 1rem' };
 const formStyle = { display: 'flex', flexDirection: 'column', gap: '1.5rem' };
 const inputGroup = { display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1 };
-const twoColStyle = { display: 'flex', gap: '1rem' }; 
 const labelStyle = { fontSize: '0.9rem', color: '#ccc' };
 const inputStyle = { padding: '0.8rem', borderRadius: '8px', border: 'none', backgroundColor: '#f8f9fa', color: '#333', fontSize: '1rem', width: '100%', boxSizing: 'border-box' };
 const errorTextStyle = { color: '#ff6b81', fontSize: '0.8rem', marginTop: '-0.3rem' };

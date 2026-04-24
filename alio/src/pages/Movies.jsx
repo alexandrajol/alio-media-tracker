@@ -1,7 +1,7 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { MediaContext } from '../context/MediaContext';
-import MediaStats from '../components/MediaStats'; // <-- Import your new chart!
+import MediaStats from '../components/MediaStats';
 
 export default function Movies() {
   const { mediaItems } = useContext(MediaContext);
@@ -11,25 +11,58 @@ export default function Movies() {
 
   // Pagination Logic
   const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 6; // Reduced to 6 so the grid fits nicely next to the charts
+  const ITEMS_PER_PAGE = 6; 
   const totalPages = Math.ceil(movies.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const currentMovies = movies.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
+  // --- RESPONSIVE STATE ---
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Breakpoints for tablets and phones
+  const isMobile = windowWidth < 960;
+  const isTinyScreen = windowWidth < 500;
+
+  // --- DYNAMIC STYLES ---
+  const dynamicSplitLayout = {
+    display: 'flex',
+    flexDirection: isMobile ? 'column' : 'row', // Stack on small screens!
+    gap: '3rem',
+    alignItems: isMobile ? 'center' : 'flex-start',
+  };
+
+  const dynamicRightColumn = {
+    flex: '1',
+    width: '100%',
+    position: isMobile ? 'static' : 'sticky', // Un-stick the stats on mobile
+    top: '100px',
+  };
+
+  const dynamicGridStyle = {
+    display: 'grid',
+    // 3 columns on desktop, 2 on tablets, 1 on tiny phones
+    gridTemplateColumns: isTinyScreen ? 'repeat(1, 1fr)' : (isMobile ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)'),
+    gap: '2rem',
+    width: '100%',
+    marginBottom: '3rem',
+  };
+
   return (
     <div style={pageContainer}>
-      
-      {/* Header spanning the whole top */}
       <div style={headerStyle}>
         <button onClick={() => navigate('/add')} style={addBtnStyle}>Add a new Movie</button>
       </div>
 
-      {/* The 2-Column Side-by-Side Layout */}
-      <div style={splitLayout}>
-        
+      <div style={dynamicSplitLayout}>
         {/* LEFT COLUMN: The Master Grid */}
         <div style={leftColumn}>
-          <div style={gridStyle}>
+          <div style={dynamicGridStyle}>
             {currentMovies.map((movie) => (
               <Link to={`/movies/${movie.id}`} key={movie.id} style={cardStyle}>
                 <img src={movie.posterUrl} alt={movie.title} style={posterStyle} />
@@ -56,28 +89,20 @@ export default function Movies() {
         </div>
 
         {/* RIGHT COLUMN: The Interactive Statistics */}
-        <div style={rightColumn}>
-          {/* We pass the UNPAGINATED movies array here so it graphs ALL data, not just page 1 */}
+        <div style={dynamicRightColumn}>
           <MediaStats data={movies} type="Movie" /> 
         </div>
-
       </div>
     </div>
   );
 }
 
-// --- Inline Styles (Updated for Side-by-Side) ---
+// --- STATIC INLINE STYLES ---
 const pageContainer = { padding: '2rem', maxWidth: '1400px', margin: '0 auto' };
 const headerStyle = { width: '100%', display: 'flex', justifyContent: 'flex-start', marginBottom: '2rem' };
 const addBtnStyle = { backgroundColor: '#ff6b81', color: 'white', border: 'none', padding: '0.8rem 2rem', borderRadius: '20px', fontSize: '1rem', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.3)' };
-
-// THE MAGIC LAYOUT
-const splitLayout = { display: 'flex', gap: '3rem', alignItems: 'flex-start' };
-const leftColumn = { flex: '2', display: 'flex', flexDirection: 'column', alignItems: 'center' }; // Grid gets 2/3 of space
-const rightColumn = { flex: '1', position: 'sticky', top: '100px' }; // Stats get 1/3 and stick to the screen when scrolling down!
-
-const gridStyle = { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '2rem', width: '100%', marginBottom: '3rem' };
+const leftColumn = { flex: '2', display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }; 
 const cardStyle = { display: 'block', transition: 'transform 0.2s', cursor: 'pointer', textDecoration: 'none' };
 const posterStyle = { width: '100%', height: 'auto', aspectRatio: '2 / 3', borderRadius: '15px', boxShadow: '0 6px 12px rgba(0,0,0,0.4)', objectFit: 'cover' };
-const paginationStyle = { display: 'flex', gap: '1rem', justifyContent: 'center' };
+const paginationStyle = { display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' };
 const pageBtnStyle = { width: '40px', height: '40px', borderRadius: '50%', border: 'none', fontSize: '1.2rem', fontWeight: 'bold', color: '#333', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' };
