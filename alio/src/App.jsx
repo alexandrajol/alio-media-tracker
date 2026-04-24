@@ -31,11 +31,11 @@ function App() {
           <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
           <Route path="/movies" element={<ProtectedRoute><Movies /></ProtectedRoute>} />
           <Route path="/books" element={<ProtectedRoute><Books /></ProtectedRoute>} />
-          <Route path="/shows" element={<ProtectedRoute><Shows /></ProtectedRoute>} />
+          <Route path="/tvshows" element={<ProtectedRoute><Shows /></ProtectedRoute>} />
           
           <Route path="/movies/:id" element={<ProtectedRoute><MovieDetails /></ProtectedRoute>} />
           <Route path="/books/:id" element={<ProtectedRoute><MovieDetails /></ProtectedRoute>} />
-          <Route path="/shows/:id" element={<ProtectedRoute><MovieDetails /></ProtectedRoute>} />
+          <Route path="/tvshows/:id" element={<ProtectedRoute><MovieDetails /></ProtectedRoute>} />
           
           <Route path="/add" element={<ProtectedRoute><MediaForm /></ProtectedRoute>} />
           <Route path="/edit/:id" element={<ProtectedRoute><MediaForm /></ProtectedRoute>} />
