@@ -1,20 +1,16 @@
 import React, { useState, useContext } from 'react';
-import { useNavigate, useParams } from 'react-router-dom'; // <-- Imported useParams
+import { useNavigate, useParams } from 'react-router-dom';
 import { MediaContext } from '../context/MediaContext';
 
 export default function MediaForm() {
-  const { mediaItems, addMedia, updateMedia } = useContext(MediaContext); // <-- Grabbed updateMedia
+  const { mediaItems, addMedia, updateMedia } = useContext(MediaContext);
   const navigate = useNavigate();
-  
-  // 1. Check if there is an ID in the URL
   const { id } = useParams();
-  
-  // 2. If there is an ID, find the existing item in our RAM database
   const existingItem = id ? mediaItems.find(m => m.id === parseInt(id)) : null;
 
-  // 3. Set the initial state: If existingItem exists, use its data! Otherwise, use blanks.
+  // Added "genre" to the default state!
   const defaultState = {
-    title: '', type: 'Movie', year: '', rating: '', review: '', watched: '',
+    title: '', type: 'Movie', genre: '', year: '', rating: '', review: '', watched: '',
     posterUrl: '', director: '', author: '', duration: '', pages: '', seasons: ''
   };
   
@@ -40,6 +36,17 @@ export default function MediaForm() {
       newErrors.rating = 'Rating must be a number between 1 and 5.';
     }
 
+    // --- NEW: Date Watched Validation ---
+    // Only validate if they actually typed something (assuming the field is optional)
+    if (formData.watched && formData.watched.trim() !== '') {
+      // Regex checks for DD.MM.YYYY format and basic valid numbers (e.g., month isn't 99)
+      const dateRegex = /^(0[1-9]|[12][0-9]|3[01])\.(0[1-9]|1[012])\.\d{4}$/;
+      
+      if (!dateRegex.test(formData.watched)) {
+        newErrors.watched = 'Must be a valid date (DD.MM.YYYY).';
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -57,7 +64,6 @@ export default function MediaForm() {
         year: parseInt(formData.year),
         rating: parseInt(formData.rating),
         posterUrl: finalPosterUrl,
-        // 4. IMPORTANT: If editing, keep the same ID. If creating, make a new Date.now() ID.
         id: existingItem ? existingItem.id : Date.now() 
       };
 
@@ -71,12 +77,8 @@ export default function MediaForm() {
         if (finalData.pages) finalData.pages = parseInt(finalData.pages);
       }
 
-      // 5. Choose the right action!
-      if (existingItem) {
-        updateMedia(finalData); // Save over the old one
-      } else {
-        addMedia(finalData);    // Create a new one
-      }
+      if (existingItem) updateMedia(finalData);
+      else addMedia(finalData);
 
       if (formData.type === 'Book') navigate('/books');
       else if (formData.type === 'TV Show') navigate('/shows');
@@ -87,20 +89,27 @@ export default function MediaForm() {
   return (
     <div style={pageContainer}>
       <div style={cardStyle}>
-        {/* Dynamic Title: Changes based on if we are editing or adding */}
         <h2 style={{ textAlign: 'center', marginBottom: '2rem' }}>
           {existingItem ? 'Edit Media' : 'Add to Alio'}
         </h2>
         
         <form onSubmit={handleSubmit} style={formStyle}>
           
-          <div style={inputGroup}>
-            <label style={labelStyle}>Type</label>
-            <select name="type" value={formData.type} onChange={handleChange} style={inputStyle}>
-              <option value="Movie">Movie</option>
-              <option value="TV Show">TV Show</option>
-              <option value="Book">Book</option>
-            </select>
+          <div style={twoColStyle}>
+            <div style={inputGroup}>
+              <label style={labelStyle}>Type</label>
+              <select name="type" value={formData.type} onChange={handleChange} style={inputStyle}>
+                <option value="Movie">Movie</option>
+                <option value="TV Show">TV Show</option>
+                <option value="Book">Book</option>
+              </select>
+            </div>
+            
+            {/* THE NEW GENRE INPUT */}
+            <div style={inputGroup}>
+              <label style={labelStyle}>Genre</label>
+              <input name="genre" placeholder="e.g. Comedy" value={formData.genre} onChange={handleChange} style={inputStyle} />
+            </div>
           </div>
 
           <div style={inputGroup}>
@@ -158,7 +167,15 @@ export default function MediaForm() {
           <div style={twoColStyle}>
             <div style={inputGroup}>
               <label style={labelStyle}>Date Watched/Read</label>
-              <input name="watched" placeholder="DD.MM.YYYY" value={formData.watched || ''} onChange={handleChange} style={inputStyle} />
+              <input 
+                name="watched" 
+                placeholder="DD.MM.YYYY" 
+                value={formData.watched || ''} 
+                onChange={handleChange} 
+                style={inputStyle} 
+              />
+              {/* --- NEW: Show the error message if the date is invalid --- */}
+              {errors.watched && <span style={errorTextStyle}>{errors.watched}</span>}
             </div>
             <div style={inputGroup}>
               <label style={labelStyle}>Poster Image URL</label>
