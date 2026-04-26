@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
 const OPTIONS = [
-  { id: 'books', title: 'Books', sub: 'Track your reading universe', icon: '📚', bg: 'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?q=80&w=800&auto=format&fit=crop' },
-  { id: 'shows', title: 'TV Shows', sub: 'Binge-watch tracking', icon: '📺', bg: 'https://images.unsplash.com/photo-1593784991095-a205069470b6?q=80&w=800&auto=format&fit=crop' },
-  { id: 'movies', title: 'Movies', sub: 'Your personal cinema', icon: '🎬', bg: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=800&auto=format&fit=crop' }
+  { id: 'books', title: 'Books', sub: 'Track your reading universe', icon: 'B', bg: 'https://images.unsplash.com/photo-1472173148041-00294f0814a2?fm=jpg&q=60&w=3000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8bGlicmFyeSUyMGFlc3RoZXRpY3xlbnwwfHwwfHx8MA%3D%3D?q=80&w=800&auto=format&fit=crop' },
+  { id: 'tvshows', title: 'TV Shows', sub: 'Binge-watch tracking', icon: 'T', bg: 'https://t3.ftcdn.net/jpg/04/68/31/16/360_F_468311607_z6Yu6bN0hHH0OtujaXnoXfCeP8BjK1f2.jpg?q=80&w=800&auto=format&fit=crop' },
+  { id: 'movies', title: 'Movies', sub: 'Your personal cinema', icon: 'M', bg: 'https://turismistoric.ro/wp-content/uploads/2019/03/Cinema-film.jpg?q=80&w=800&auto=format&fit=crop' }
 ];
 
 export default function Home() {

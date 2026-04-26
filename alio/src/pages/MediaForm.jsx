@@ -86,7 +86,7 @@ export default function MediaForm() {
       else addMedia(finalData);
 
       if (formData.type === 'Book') navigate('/books');
-      else if (formData.type === 'TV Show') navigate('/shows');
+      else if (formData.type === 'TV Show') navigate('/tvshows');
       else navigate('/movies');
     }
   };

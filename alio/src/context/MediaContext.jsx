@@ -81,13 +81,13 @@ export const MediaProvider = ({ children }) => {
     
     // --- MOCK BOOKS ---
     { 
-      id: 12, title: 'Dune', type: 'Book', author: 'Frank Herbert', 
+      id: 13, title: 'Dune', type: 'Book', author: 'Frank Herbert', 
       year: 1965, pages: 412, rating: 5, watched: '01.03.2023', 
       review: 'A masterpiece of science fiction.', genre: 'Science-Fiction',
       posterUrl: 'https://m.media-amazon.com/images/I/81Ua99CURsL._AC_UF1000,1000_QL80_.jpg' 
     },
     { 
-      id: 13, title: '1984', type: 'Book', author: 'George Orwell', 
+      id: 14, title: '1984', type: 'Book', author: 'George Orwell', 
       year: 1949, pages: 328, rating: 5, watched: '15.04.2023', 
       review: 'Chilling and prophetic.', genre: 'Dystopian',
       posterUrl: 'https://m.media-amazon.com/images/I/71wANojhEKL._AC_UF1000,1000_QL80_.jpg' 
@@ -95,13 +95,13 @@ export const MediaProvider = ({ children }) => {
 
     // --- MOCK TV SHOWS ---
     { 
-      id: 14, title: 'Breaking Bad', type: 'TV Show', director: 'Vince Gilligan', 
+      id: 15, title: 'Breaking Bad', type: 'TV Show', director: 'Vince Gilligan', 
       year: 2008, seasons: 5, rating: 5, watched: '10.05.2021', 
       review: 'The greatest character arc in television history.', genre: 'Crime',
       posterUrl: 'https://m.media-amazon.com/images/M/MV5BMzU5ZGYzNmQtMTdhYy00OGRiLTg0NmQtYjVjNzliZTg1ZGE4XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg' 
     },
     { 
-      id: 15, title: 'The Office', type: 'TV Show', director: 'Greg Daniels', 
+      id: 16, title: 'The Office', type: 'TV Show', director: 'Greg Daniels', 
       year: 2005, seasons: 9, rating: 4, watched: '10.10.2012', 
       review: 'My comfort show.', genre: 'Sitcom',
       posterUrl: 'https://m.media-amazon.com/images/M/MV5BZjQwYzBlYzUtZjhhOS00ZDQ0LWE0NzAtYTk4MjgzZTNkZWEzXkEyXkFqcGc@._V1_QL75_UX190_CR0,2,190,281_.jpg' 
