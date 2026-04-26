@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import Cookies from 'js-cookie';
+
 
 const OPTIONS = [
   { id: 'books', title: 'Books', sub: 'Track your reading universe', icon: 'B', bg: 'https://images.unsplash.com/photo-1472173148041-00294f0814a2?fm=jpg&q=60&w=3000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8bGlicmFyeSUyMGFlc3RoZXRpY3xlbnwwfHwwfHx8MA%3D%3D?q=80&w=800&auto=format&fit=crop' },
@@ -103,6 +105,43 @@ export default function Home() {
           );
         })}
       </div>
+
+      {/* --- TELEMETRY DISPLAY --- */}
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1 }}
+        style={{
+          marginTop: '4rem', padding: '1.5rem 2rem', backgroundColor: '#2b3035',
+          borderRadius: '20px', color: '#ccc', textAlign: 'center',
+          boxShadow: '0 4px 10px rgba(0,0,0,0.3)', border: '1px solid #444'
+        }}
+      >
+        <h3 style={{ color: 'white', margin: '0 0 1rem 0' }}>Alio Telemetry Data</h3>
+        
+        <p style={{ margin: '0 0 0.5rem 0' }}>
+          <strong>Total Interactions:</strong>{' '}
+          <span style={{ color: '#ff6b81', fontWeight: 'bold' }}>
+            {Cookies.get('alio_total_clicks') || 1}
+          </span>
+        </p>
+
+        <p style={{ margin: 0 }}>
+          <strong>Preferred Media:</strong>{' '}
+          <span style={{ color: '#ff6b81', fontWeight: 'bold', textTransform: 'capitalize' }}>
+            {(() => {
+              const rawPrefs = Cookies.get('alio_preferences');
+              if (!rawPrefs) return 'Exploring...';
+              
+              const prefs = JSON.parse(rawPrefs);
+              // Finds the category with the highest score
+              const favorite = Object.keys(prefs).reduce((a, b) => prefs[a] > prefs[b] ? a : b);
+              
+              return prefs[favorite] === 0 ? 'Exploring...' : (favorite === 'tvshow' ? 'TV Shows' : favorite);
+            })()}
+          </span>
+        </p>
+      </motion.div>
 
     </div>
   );
