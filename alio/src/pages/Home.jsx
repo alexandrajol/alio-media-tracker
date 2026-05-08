@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Cookies from 'js-cookie';
-
+import EuclideanSequencer from '../components/EuclideanSequencer';
 
 const OPTIONS = [
   { id: 'books', title: 'Books', sub: 'Track your reading universe', icon: 'B', bg: 'https://images.unsplash.com/photo-1472173148041-00294f0814a2?fm=jpg&q=60&w=3000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8bGlicmFyeSUyMGFlc3RoZXRpY3xlbnwwfHwwfHx8MA%3D%3D?q=80&w=800&auto=format&fit=crop' },
@@ -105,6 +105,8 @@ export default function Home() {
           );
         })}
       </div>
+
+      <EuclideanSequencer />
 
       {/* --- TELEMETRY DISPLAY --- */}
       <motion.div 
