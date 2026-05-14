@@ -36,7 +36,7 @@ export default function Home() {
       >
         {/* Slightly smaller logo on mobile */}
         <h1 style={{...logoStyle, fontSize: isMobile ? '3rem' : '4rem'}}>ALIO</h1> 
-        <h2 style={{...taglineStyle, fontSize: isMobile ? '1rem' : '1.2rem'}}>Track your entertainment universe.</h2>
+        <h2 style={{...taglineStyle, fontSize: isMobile ? '1rem' : '1.2rem'}}>Have your books, movies and TV shows All In One.</h2>
       </motion.div>
 
       {/* THE ACCORDION FLEX CARDS */}

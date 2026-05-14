@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, px } from 'framer-motion';
+import AlioLogo from '../assets/LOGO.png';
 
 export default function Navbar() {
   const { logout } = useContext(AuthContext);
@@ -33,8 +34,8 @@ export default function Navbar() {
     <>
       <nav style={navStyle}>
         {/* LOGO */}
-        <Link to="/" style={logoStyle} onClick={closeMenu}>
-          ALIO
+        <Link to="/" style={logoNavContainerStyle} onClick={closeMenu}>
+          <img src={AlioLogo} alt='ALIO' style={logoImageStyle}/>
         </Link>
 
         {/* DESKTOP LINKS (Hidden on Mobile) */}
@@ -105,6 +106,20 @@ const logoStyle = {
   textDecoration: 'none',
   letterSpacing: '2px',
 };
+
+const logoNavContainerStyle = {
+  display: 'flex',
+  alignItems: 'center',
+  textDecoration: 'none',
+};
+
+const logoImageStyle = {
+  height: '60px',
+  width: 'auto',
+  objectFit: 'contain',
+};
+
+
 
 // Desktop Styles
 const desktopLinksStyle = {
