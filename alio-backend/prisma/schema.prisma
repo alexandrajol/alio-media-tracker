@@ -1,0 +1,55 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/client"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  username  String
+  medias    Media[]
+}
+
+model Category {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique // Movie / Book / TV Show
+  medias    Media[]
+}
+
+model Media {
+  id          Int      @id @default(autoincrement())
+  
+  // Common Fields
+  title       String
+  genre       String?
+  year        Int?
+  rating      Int?     
+  review      String?  
+  watched     String?  
+  posterUrl   String?
+
+  // Movie / TV Show Specific Fields
+  director    String?
+  duration    String?
+  seasons     Int?
+
+  // Book Specific Fields
+  author      String?
+  pages       Int?
+
+  // Foreign Keys for 3NF
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
+  
+  categoryId  Int
+  category    Category @relation(fields: [categoryId], references: [id])
+}
