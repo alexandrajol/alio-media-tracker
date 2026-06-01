@@ -36,7 +36,7 @@ git push origin main
    - **Name:** `alio-backend`
    - **Root Directory:** `alio-backend`
    - **Environment:** Node
-   - **Build Command:** `npm install && cp prisma/schema.production.prisma prisma/schema.prisma && npx prisma generate && npx prisma migrate deploy`
+   - **Build Command:** `npm install && cp prisma/schema.production.prisma prisma/schema.prisma && npx prisma generate && npx prisma db push --accept-data-loss`
    - **Start Command:** `node server.js`
    - **Plan:** Free
 4. **Environment Variables** (click "Add Environment Variable"):
@@ -109,8 +109,10 @@ Your app is now publicly accessible at:
 - Free tier services sleep after 15 min of inactivity
 - First request after sleep takes ~30 seconds (cold start)
 - Upgrade to paid tier ($7/month per service) for always-on
+- We use `prisma db push` instead of `migrate deploy` because local migrations are SQLite-based
 
 ### Troubleshooting:
 - Check logs in Render dashboard
 - Verify DATABASE_URL is set correctly
 - Ensure CORS allows your frontend URL
+- If you see migration provider mismatch errors, the build command handles it automatically with `db push`
