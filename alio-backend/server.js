@@ -4,6 +4,7 @@ const http = require('http');
 const https = require('https');
 const path = require('path');
 const app = require('./src/app');
+const seedDatabase = require('./src/seedDatabase');
 
 const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
@@ -31,10 +32,11 @@ if (hasSSL && process.env.NODE_ENV !== 'production') {
   });
 } else {
   // Production or when SSL certs don't exist - HTTP only
-  http.createServer(app).listen(PORT, HOST, () => {
+  http.createServer(app).listen(PORT, HOST, async () => {
     console.log(`✓ Backend running on http://${HOST}:${PORT}`);
     if (process.env.NODE_ENV === 'production') {
       console.log('Running in production mode');
+      await seedDatabase();
     }
   });
 }

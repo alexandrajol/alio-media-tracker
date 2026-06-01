@@ -73,29 +73,13 @@ After getting your frontend URL (e.g., `https://alio-frontend.onrender.com`):
    - Value: `https://alio-frontend.onrender.com`
 3. The app will auto-redeploy
 
-### Step 6: Seed Database (Optional)
+### Step 6: Seed Database (Automatic)
 
-If you need to add initial categories:
+The database is automatically seeded with initial categories (Movie, Book, TV Show) when the server starts in production mode. No manual action needed!
 
-1. Go to your backend service on Render
-2. Click **"Shell"** tab
-3. Run:
-```bash
-node -e "
-const prisma = require('./src/config/prismaClient');
-(async () => {
-  await prisma.category.createMany({
-    data: [
-      { name: 'Movie' },
-      { name: 'Book' },
-      { name: 'TV Show' }
-    ],
-    skipDuplicates: true
-  });
-  console.log('Categories seeded!');
-})();
-"
-```
+If you need to add more categories later, you can:
+1. Add them through the API/frontend
+2. Or update `src/seedDatabase.js` and redeploy
 
 ---
 
