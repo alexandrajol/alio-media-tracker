@@ -36,7 +36,7 @@ git push origin main
    - **Name:** `alio-backend`
    - **Root Directory:** `alio-backend`
    - **Environment:** Node
-   - **Build Command:** `npm install && npx prisma generate && npx prisma migrate deploy`
+   - **Build Command:** `npm install && cp prisma/schema.production.prisma prisma/schema.prisma && npx prisma generate && npx prisma migrate deploy`
    - **Start Command:** `node server.js`
    - **Plan:** Free
 4. **Environment Variables** (click "Add Environment Variable"):
