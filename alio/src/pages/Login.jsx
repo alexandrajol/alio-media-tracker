@@ -6,17 +6,26 @@ export default function Login() {
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
   const [formData, setFormData] = useState({ email: '', password: '' });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // In a real app, we would validate the credentials here. 
-    // For now, any click logs them in!
-    login();
-    navigate('/'); // Send them to the Home page after login
+    setLoading(true);
+    setError('');
+
+    try {
+      await login(formData);
+      navigate('/');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -25,16 +34,19 @@ export default function Login() {
         <form onSubmit={handleSubmit} style={formStyle}>
           
           <div style={inputGroup}>
-            <label style={labelStyle}>Email</label>
-            <input type="email" name="email" value={formData.email} onChange={handleChange} style={inputStyle} required />
+            <label htmlFor="login-email" style={labelStyle}>Email</label>
+            <input id="login-email" type="email" name="email" value={formData.email} onChange={handleChange} style={inputStyle} required />
           </div>
 
           <div style={inputGroup}>
-            <label style={labelStyle}>Password</label>
-            <input type="password" name="password" value={formData.password} onChange={handleChange} style={inputStyle} required />
+            <label htmlFor="login-password" style={labelStyle}>Password</label>
+            <input id="login-password" type="password" name="password" value={formData.password} onChange={handleChange} style={inputStyle} required />
           </div>
 
-          <button type="submit" style={submitBtnStyle}>Log In</button>
+          <button type="submit" disabled={loading} style={submitBtnStyle}>
+            {loading ? 'Logging in...' : 'Log In'}
+          </button>
+          {error && <p style={errorStyle}>{error}</p>}
         </form>
 
         <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
@@ -56,3 +68,4 @@ export const labelStyle = { fontSize: '0.9rem', color: '#ccc' };
 export const inputStyle = { padding: '1rem', borderRadius: '8px', border: 'none', backgroundColor: '#f8f9fa', color: '#333', fontSize: '1rem' };
 export const submitBtnStyle = { backgroundColor: '#ff6b81', color: 'white', border: 'none', padding: '1rem', borderRadius: '25px', fontSize: '1.1rem', fontWeight: 'bold', cursor: 'pointer', marginTop: '1rem' };
 export const linkStyle = { color: '#ff6b81', fontSize: '0.8rem', textDecoration: 'none', display: 'inline-block', marginTop: '0.5rem' };
+export const errorStyle = { color: '#ff6b81', textAlign: 'center', margin: '0.25rem 0 0 0', fontWeight: 'bold' };

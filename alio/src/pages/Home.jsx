@@ -139,7 +139,7 @@ export default function Home() {
               // Finds the category with the highest score
               const favorite = Object.keys(prefs).reduce((a, b) => prefs[a] > prefs[b] ? a : b);
               
-              return prefs[favorite] === 0 ? 'Exploring...' : (favorite === 'tvshow' ? 'TV Shows' : favorite);
+              return prefs[favorite] === 0 ? 'Exploring...' : (favorite === 'tvshows' ? 'TV Shows' : favorite);
             })()}
           </span>
         </p>

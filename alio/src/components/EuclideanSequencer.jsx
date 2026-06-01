@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect, useRef } from 'react';
+import React, { useContext, useState, useEffect, useRef, useMemo } from 'react';
 import { MediaContext } from '../context/MediaContext';
 import { motion } from 'framer-motion';
 
@@ -13,16 +13,27 @@ const generateEuclidean = (pulses, steps) => {
 };
 
 // --- NATIVE BROWSER AUDIO SYNTHESIS ---
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+let audioCtx;
+
+const getAudioContext = () => {
+  if (typeof window === 'undefined') return null;
+  if (!audioCtx) {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    audioCtx = AudioContext ? new AudioContext() : null;
+  }
+  return audioCtx;
+};
 
 const playDrum = (type) => {
-  if (audioCtx.state === 'suspended') audioCtx.resume();
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  if (ctx.state === 'suspended') ctx.resume();
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
   osc.connect(gain);
-  gain.connect(audioCtx.destination);
+  gain.connect(ctx.destination);
 
-  const now = audioCtx.currentTime;
+  const now = ctx.currentTime;
   
   if (type === 'kick') {
     osc.frequency.setValueAtTime(150, now);
@@ -50,21 +61,26 @@ const playDrum = (type) => {
 
 export default function EuclideanSequencer() {
   const { mediaItems } = useContext(MediaContext);
+  const items = Array.isArray(mediaItems) ? mediaItems : [];
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const isMobile = windowWidth < 640;
   
   // --- DATA MAPPING LOGIC ---
   const STEPS = 16;
+  const years = items.map((item) => item.year).filter(Boolean);
+  const ratings = items.map((item) => item.rating).filter(Boolean);
   
-  const avgYear = mediaItems.length ? Math.round(mediaItems.reduce((acc, curr) => acc + (curr.year || 0), 0) / mediaItems.length) : 2000;
+  const avgYear = years.length ? Math.round(years.reduce((acc, year) => acc + year, 0) / years.length) : 2000;
   const kickPulses = (avgYear % STEPS) || 4; 
   
-  const avgRating = mediaItems.length ? mediaItems.reduce((acc, curr) => acc + (curr.rating || 0), 0) / mediaItems.length : 3;
+  const avgRating = ratings.length ? ratings.reduce((acc, rating) => acc + rating, 0) / ratings.length : 3;
   const hatPulses = Math.max(1, Math.floor((avgRating / 5) * STEPS)); 
 
-  const snarePulses = Math.max(1, (mediaItems.length % (STEPS / 2)));
+  const snarePulses = Math.max(1, (items.length % (STEPS / 2)));
 
-  const kickPattern = generateEuclidean(kickPulses, STEPS);
-  const snarePattern = generateEuclidean(snarePulses, STEPS);
-  const hatPattern = generateEuclidean(hatPulses, STEPS);
+  const kickPattern = useMemo(() => generateEuclidean(kickPulses, STEPS), [kickPulses]);
+  const snarePattern = useMemo(() => generateEuclidean(snarePulses, STEPS), [snarePulses]);
+  const hatPattern = useMemo(() => generateEuclidean(hatPulses, STEPS), [hatPulses]);
 
   // --- SEQUENCER STATE ---
   const [isPlaying, setIsPlaying] = useState(false);
@@ -72,6 +88,12 @@ export default function EuclideanSequencer() {
   
   // NEW: BPM State (Defaults to 100 BPM)
   const [bpm, setBpm] = useState(100); 
+
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const stepRef = useRef(currentStep);
   stepRef.current = currentStep;
@@ -101,23 +123,35 @@ export default function EuclideanSequencer() {
     return () => clearInterval(interval);
   }, [isPlaying, kickPattern, snarePattern, hatPattern, bpm]); 
 
+  if (!mediaItems) {
+    return <div style={{ color: 'white', textAlign: 'center' }}>Loading Sequencer Data...</div>;
+  }
+
+  if (items.length === 0) {
+    return (
+      <div style={{ color: '#ccc', textAlign: 'center', marginTop: '2rem' }}>
+        <em>Add some movies or books to see the Euclidean Sequencer activate!</em>
+      </div>
+    );
+  }
+
   return (
-    <div style={containerStyle}>
-      <h2 style={titleStyle}>The Data Sequencer</h2>
-      <p style={subtitleStyle}>Your media library translated into Euclidean rhythms.</p>
+    <div style={isMobile ? mobileContainerStyle : containerStyle}>
+      <h2 style={isMobile ? mobileTitleStyle : titleStyle}>The Data Sequencer</h2>
+      <p style={isMobile ? mobileSubtitleStyle : subtitleStyle}>Your media library translated into Euclidean rhythms.</p>
 
       {/* STATS DISPLAY */}
-      <div style={statsContainer}>
-        <div style={statBox}>Avg Year: {avgYear} <br/> <span style={{color: '#ff6b81'}}>({kickPulses} Kicks)</span></div>
-        <div style={statBox}>Avg Rating: {avgRating.toFixed(1)} <br/> <span style={{color: '#ff6b81'}}>({hatPulses} Hats)</span></div>
-        <div style={statBox}>Total Media: {mediaItems.length} <br/> <span style={{color: '#ff6b81'}}>({snarePulses} Snares)</span></div>
+      <div style={isMobile ? mobileStatsContainer : statsContainer}>
+        <div style={isMobile ? mobileStatBox : statBox}>Avg Year: {avgYear} <br/> <span style={{color: '#ff6b81'}}>({kickPulses} Kicks)</span></div>
+        <div style={isMobile ? mobileStatBox : statBox}>Avg Rating: {avgRating.toFixed(1)} <br/> <span style={{color: '#ff6b81'}}>({hatPulses} Hats)</span></div>
+        <div style={isMobile ? mobileStatBox : statBox}>Total Media: {items.length} <br/> <span style={{color: '#ff6b81'}}>({snarePulses} Snares)</span></div>
       </div>
 
       {/* SEQUENCER GRID */}
-      <div style={gridStyle}>
-        <Track name="Kick" pattern={kickPattern} currentStep={currentStep} color="#ff6b81" />
-        <Track name="Snare" pattern={snarePattern} currentStep={currentStep} color="#2ECC71" />
-        <Track name="Hi-Hat" pattern={hatPattern} currentStep={currentStep} color="#5D9CEC" />
+      <div style={isMobile ? mobileGridStyle : gridStyle}>
+        <Track name="Kick" pattern={kickPattern} currentStep={currentStep} color="#ff6b81" isMobile={isMobile} />
+        <Track name="Snare" pattern={snarePattern} currentStep={currentStep} color="#2ECC71" isMobile={isMobile} />
+        <Track name="Hi-Hat" pattern={hatPattern} currentStep={currentStep} color="#5D9CEC" isMobile={isMobile} />
       </div>
 
       {/* CONTROLS SECTION */}
@@ -125,20 +159,20 @@ export default function EuclideanSequencer() {
         {/* Play Button */}
         <button 
           onClick={() => setIsPlaying(!isPlaying)} 
-          style={{...playBtnStyle, backgroundColor: isPlaying ? '#555' : '#ff6b81'}}
+          style={{...(isMobile ? mobilePlayBtnStyle : playBtnStyle), backgroundColor: isPlaying ? '#555' : '#ff6b81'}}
         >
-          {isPlaying ? '■ STOP' : '▶ PLAY YOUR DATA'}
+          {isPlaying ? 'STOP' : 'PLAY YOUR DATA'}
         </button>
 
         {/* BPM Slider */}
-        <div style={bpmContainer}>
+        <div style={isMobile ? mobileBpmContainer : bpmContainer}>
           <label style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>BPM: {bpm}</label>
           <input 
             type="range" 
             min="60" 
             max="200" 
             value={bpm} 
-            onChange={(e) => setBpm(e.target.value)} 
+            onChange={(e) => setBpm(Number(e.target.value))} 
             style={sliderStyle}
           />
         </div>
@@ -148,10 +182,10 @@ export default function EuclideanSequencer() {
 }
 
 // --- SUB-COMPONENT: A Single Track Row ---
-const Track = ({ name, pattern, currentStep, color }) => (
-  <div style={trackStyle}>
-    <div style={trackName}>{name}</div>
-    <div style={stepsContainer}>
+const Track = ({ name, pattern, currentStep, color, isMobile }) => (
+  <div style={isMobile ? mobileTrackStyle : trackStyle}>
+    <div style={isMobile ? mobileTrackName : trackName}>{name}</div>
+    <div style={isMobile ? mobileStepsContainer : stepsContainer}>
       {pattern.map((isActive, i) => (
         <motion.div
           key={i}
@@ -160,7 +194,7 @@ const Track = ({ name, pattern, currentStep, color }) => (
             opacity: currentStep === i ? 1 : 0.8
           }}
           style={{
-            ...stepNode,
+            ...(isMobile ? mobileStepNode : stepNode),
             backgroundColor: isActive ? color : '#333',
             boxShadow: currentStep === i && isActive ? `0 0 15px ${color}` : 'none',
             border: currentStep === i ? '2px solid white' : '2px solid transparent'
@@ -173,16 +207,28 @@ const Track = ({ name, pattern, currentStep, color }) => (
 
 // --- STYLES ---
 const containerStyle = { padding: '2rem', backgroundColor: '#232223', borderRadius: '20px', color: 'white', maxWidth: '800px', margin: '2rem auto', textAlign: 'center', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' };
+const mobileContainerStyle = { ...containerStyle, padding: '1rem', borderRadius: '14px', margin: '1.5rem auto', width: '100%', boxSizing: 'border-box' };
 const titleStyle = { fontSize: '2.5rem', margin: '0 0 0.5rem 0', fontWeight: '900', letterSpacing: '2px' };
+const mobileTitleStyle = { ...titleStyle, fontSize: '1.6rem' };
 const subtitleStyle = { color: '#ccc', marginBottom: '2rem' };
+const mobileSubtitleStyle = { ...subtitleStyle, marginBottom: '1.25rem', fontSize: '0.9rem' };
 const statsContainer = { display: 'flex', justifyContent: 'center', gap: '2rem', marginBottom: '2rem', flexWrap: 'wrap' };
+const mobileStatsContainer = { display: 'grid', gridTemplateColumns: '1fr', gap: '0.7rem', marginBottom: '1rem' };
 const statBox = { backgroundColor: '#343a40', padding: '1rem', borderRadius: '10px', fontSize: '0.9rem', fontWeight: 'bold', minWidth: '120px' };
+const mobileStatBox = { ...statBox, minWidth: 0, padding: '0.75rem', fontSize: '0.85rem' };
 const gridStyle = { display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem', backgroundColor: '#1a1a1a', padding: '1.5rem', borderRadius: '15px' };
+const mobileGridStyle = { ...gridStyle, gap: '0.85rem', marginBottom: '1.5rem', padding: '0.8rem', borderRadius: '12px' };
 const trackStyle = { display: 'flex', alignItems: 'center', gap: '1rem' };
+const mobileTrackStyle = { display: 'grid', gridTemplateColumns: '44px minmax(0, 1fr)', alignItems: 'center', gap: '0.35rem', width: '100%', minWidth: 0 };
 const trackName = { width: '60px', fontWeight: 'bold', fontSize: '0.9rem', textAlign: 'right', color: '#888' };
+const mobileTrackName = { ...trackName, width: '44px', fontSize: '0.68rem', overflow: 'hidden', textOverflow: 'ellipsis' };
 const stepsContainer = { display: 'flex', gap: '8px', flex: 1 };
+const mobileStepsContainer = { display: 'grid', gridTemplateColumns: 'repeat(16, minmax(0, 1fr))', gap: '2px', width: '100%', minWidth: 0, overflow: 'hidden', padding: '2px', boxSizing: 'border-box' };
 const stepNode = { width: '25px', height: '25px', borderRadius: '5px', transition: 'background-color 0.2s' };
+const mobileStepNode = { width: '100%', aspectRatio: '1 / 1', minWidth: 0, borderRadius: '3px', transition: 'background-color 0.2s', boxSizing: 'border-box' };
 const controlsContainer = { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem' };
 const playBtnStyle = { border: 'none', color: 'white', padding: '1rem 3rem', borderRadius: '30px', fontSize: '1.2rem', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 4px 10px rgba(0,0,0,0.3)', transition: 'background-color 0.3s' };
+const mobilePlayBtnStyle = { ...playBtnStyle, width: '100%', padding: '0.85rem 1rem', fontSize: '1rem' };
 const bpmContainer = { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', width: '100%', maxWidth: '300px' };
+const mobileBpmContainer = { ...bpmContainer, maxWidth: '100%' };
 const sliderStyle = { width: '100%', cursor: 'pointer', accentColor: '#ff6b81' };

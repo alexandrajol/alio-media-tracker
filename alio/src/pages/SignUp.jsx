@@ -2,26 +2,38 @@ import React, { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 // We can reuse the styles we just exported from Login!
-import { pageContainer, cardStyle, formStyle, inputGroup, labelStyle, inputStyle, submitBtnStyle, linkStyle } from './Login';
+import { pageContainer, cardStyle, formStyle, inputGroup, labelStyle, inputStyle, submitBtnStyle, linkStyle, errorStyle } from './Login';
 
 export default function SignUp() {
-  const { login } = useContext(AuthContext);
+  const { register } = useContext(AuthContext);
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({ email: '', password: '', confirmPassword: '' });
+  const [formData, setFormData] = useState({ email: '', username: '', password: '', confirmPassword: '' });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+
     if (formData.password !== formData.confirmPassword) {
-      alert("Passwords don't match!");
+      setError("Passwords don't match.");
       return;
     }
-    // Simulate creating an account and logging them in instantly
-    login();
-    navigate('/');
+
+    setLoading(true);
+
+    try {
+      await register(formData);
+      navigate('/');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -30,21 +42,29 @@ export default function SignUp() {
         <form onSubmit={handleSubmit} style={formStyle}>
           
           <div style={inputGroup}>
-            <label style={labelStyle}>Email</label>
-            <input type="email" name="email" value={formData.email} onChange={handleChange} style={inputStyle} required />
+            <label htmlFor="signup-email" style={labelStyle}>Email</label>
+            <input id="signup-email" type="email" name="email" value={formData.email} onChange={handleChange} style={inputStyle} required />
           </div>
 
           <div style={inputGroup}>
-            <label style={labelStyle}>Password</label>
-            <input type="password" name="password" value={formData.password} onChange={handleChange} style={inputStyle} required />
+            <label htmlFor="signup-username" style={labelStyle}>Username</label>
+            <input id="signup-username" name="username" value={formData.username} onChange={handleChange} style={inputStyle} required />
           </div>
 
           <div style={inputGroup}>
-            <label style={labelStyle}>Confirm Password</label>
-            <input type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} style={inputStyle} required />
+            <label htmlFor="signup-password" style={labelStyle}>Password</label>
+            <input id="signup-password" type="password" name="password" value={formData.password} onChange={handleChange} style={inputStyle} required />
           </div>
 
-          <button type="submit" style={submitBtnStyle}>Sign Up</button>
+          <div style={inputGroup}>
+            <label htmlFor="signup-confirm-password" style={labelStyle}>Confirm Password</label>
+            <input id="signup-confirm-password" type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} style={inputStyle} required />
+          </div>
+
+          <button type="submit" disabled={loading} style={submitBtnStyle}>
+            {loading ? 'Creating account...' : 'Sign Up'}
+          </button>
+          {error && <p style={errorStyle}>{error}</p>}
         </form>
 
         <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>

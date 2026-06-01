@@ -1,0 +1,76 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider     = "prisma-client-js"
+  output       = "../src/generated/client"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id               Int               @id @default(autoincrement())
+  email            String            @unique
+  username         String
+  passwordHash     String?
+  role             String            @default("USER")
+  sessionTokenHash String?
+  sessionExpiresAt DateTime?
+  lastActiveAt     DateTime?
+  medias           Media[]
+  mediaStatuses    UserMediaStatus[]
+}
+
+model Category {
+  id     Int     @id @default(autoincrement())
+  name   String  @unique // Movie / Book / TV Show
+  medias Media[]
+}
+
+model Media {
+  id Int @id @default(autoincrement())
+
+  // Common Fields
+  title     String
+  genre     String?
+  year      Int?
+  rating    Int?
+  review    String?
+  posterUrl String?
+
+  // Movie / TV Show Specific Fields
+  director String?
+  duration String?
+  seasons  Int?
+
+  // Book Specific Fields
+  author String?
+  pages  Int?
+
+  // Foreign Keys for 3NF
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+
+  categoryId   Int
+  category     Category          @relation(fields: [categoryId], references: [id])
+  userStatuses UserMediaStatus[]
+}
+
+model UserMediaStatus {
+  id        Int      @id @default(autoincrement())
+  status    String
+  updatedAt DateTime @updatedAt
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  mediaId Int
+  media   Media @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, mediaId])
+}

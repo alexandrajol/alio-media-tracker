@@ -1,11 +1,12 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MediaContext } from '../context/MediaContext';
+import { getPosterUrl } from '../utils/posterPlaceholder';
 
 export default function MovieDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { mediaItems, deleteMedia } = useContext(MediaContext);
+  const { mediaItems, deleteMedia, updateMediaStatus } = useContext(MediaContext);
 
   const item = mediaItems.find(m => m.id === parseInt(id));
 
@@ -30,10 +31,15 @@ export default function MovieDetails() {
     if (window.confirm(`Are you sure you want to delete ${item.title}?`)) {
       deleteMedia(item.id);
       if (item.type === 'Book') navigate('/books');
-      else if (item.type === 'TV Show') navigate('/shows');
+      else if (item.type === 'TV Show') navigate('/tvshows');
       else navigate('/movies');
     }
   };
+
+  const completedLabel = item.type === 'Book' ? 'Read' : 'Watched';
+  const incompleteLabel = item.type === 'Book' ? 'Unread' : 'Unwatched';
+  const statusLabel = item.userStatus || incompleteLabel;
+  const toggleStatus = () => updateMediaStatus(item.id, !item.isCompleted);
 
   // --- DYNAMIC STYLES ---
   const dynamicCardStyle = { 
@@ -85,10 +91,17 @@ export default function MovieDetails() {
 
   const dynamicButtonContainer = { 
     display: 'flex', 
-    gap: '1rem', 
+    flexDirection: isMobile ? 'column' : 'row',
+    gap: isMobile ? '0.75rem' : '1rem', 
     // Center buttons on mobile, push to the right on desktop
     justifyContent: isMobile ? 'center' : 'flex-end', 
+    alignItems: isMobile ? 'stretch' : 'center',
     marginTop: '1rem' 
+  };
+
+  const dynamicActionBtnStyle = {
+    ...actionBtnStyle,
+    width: isMobile ? '100%' : 'auto',
   };
 
   return (
@@ -99,7 +112,7 @@ export default function MovieDetails() {
         <div style={dynamicTopRowStyle}>
           {/* Left Side (or Top on Mobile): Poster */}
           <div style={dynamicImageContainer}>
-            <img src={item.posterUrl} alt={item.title} style={posterStyle} />
+            <img src={getPosterUrl(item)} alt={item.title} style={posterStyle} />
           </div>
 
           {/* Right Side (or Bottom on Mobile): Details */}
@@ -116,8 +129,8 @@ export default function MovieDetails() {
             </div>
 
             <div style={ratingStyle}>
-              <p><strong>Your rating:</strong> <span style={{color: '#ff6b81'}}>{renderStars(item.rating)}</span>/5</p>
-              <p><strong>Watched:</strong> {item.watched}</p>
+              <p><strong>Rating:</strong> <span style={{color: '#ff6b81'}}>{renderStars(item.rating)}</span>/5</p>
+              <p><strong>Your status:</strong> {statusLabel}</p>
             </div>
           </div>
         </div>
@@ -125,14 +138,17 @@ export default function MovieDetails() {
         {/* --- BOTTOM ROW: Review & Buttons --- */}
         <div style={bottomRowStyle}>
           <div style={reviewStyle}>
-            <h3 style={{...reviewHeaderStyle, textAlign: isMobile ? 'center' : 'left'}}>My Review</h3>
+            <h3 style={{...reviewHeaderStyle, textAlign: isMobile ? 'center' : 'left'}}>Description</h3>
             <p style={{ textAlign: isMobile ? 'center' : 'left' }}>{item.review}</p>
           </div>
 
           {/* Action Buttons */}
           <div style={dynamicButtonContainer}>
-            <button onClick={() => navigate(`/edit/${item.id}`)} style={editBtnStyle}>Edit</button>
-            <button onClick={handleDelete} style={deleteBtnStyle}>Delete</button>
+            <button onClick={toggleStatus} className="media-detail-action-btn" style={dynamicActionBtnStyle}>
+              {item.isCompleted ? `Mark as ${incompleteLabel}` : `Mark as ${completedLabel}`}
+            </button>
+            <button onClick={() => navigate(`/edit/${item.id}`)} className="media-detail-action-btn" style={dynamicActionBtnStyle}>Edit</button>
+            <button onClick={handleDelete} className="media-detail-action-btn" style={dynamicActionBtnStyle}>Delete</button>
           </div>
         </div>
 
@@ -151,6 +167,4 @@ const ratingStyle = { fontSize: '1.2rem', fontWeight: 'bold', lineHeight: '1.6' 
 const reviewHeaderStyle = { fontSize: '1.5rem', margin: '0 0 1rem 0', color: '#333' };
 const reviewStyle = { fontSize: '1.1rem', lineHeight: '1.8', color: '#222' };
 
-const btnBase = { padding: '0.8rem 2.5rem', borderRadius: '25px', border: 'none', fontSize: '1rem', color: 'white', cursor: 'pointer', fontWeight: 'bold' };
-const editBtnStyle = { ...btnBase, backgroundColor: '#555' }; 
-const deleteBtnStyle = { ...btnBase, backgroundColor: '#ff6b81' };
+const actionBtnStyle = { padding: '0.8rem 2.5rem', borderRadius: '25px', border: '2px solid #ff6b81', fontSize: '1rem', color: '#ffffff', backgroundColor: '#ff6b81', cursor: 'pointer', fontWeight: 'bold' };

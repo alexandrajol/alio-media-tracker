@@ -34,11 +34,11 @@ function App() {
       
       // Get the existing preferences cookie, or create a fresh one
       const rawPrefs = Cookies.get('alio_preferences');
-      const preferences = rawPrefs ? JSON.parse(rawPrefs) : { movies: 0, books: 0, tvshow: 0 };
+      const preferences = rawPrefs ? JSON.parse(rawPrefs) : { movies: 0, books: 0, tvshows: 0 };
 
       // Add a point to the category they just visited
       const category = path.replace('/', ''); // turns "/movies" into "movies"
-      preferences[category] += 1;
+      preferences[category] = (preferences[category] || 0) + 1;
 
       // Save it back to the cookie
       Cookies.set('alio_preferences', JSON.stringify(preferences), { expires: 7 });

@@ -8,6 +8,7 @@ router.get('/statistics', controller.getStats);
 router.get('/', controller.getMedia); 
 router.post('/', validateMedia, controller.createMedia); 
 router.get('/:id', controller.getMediaById);
+router.patch('/:id/status', controller.updateMediaStatus);
 router.put('/:id', validateMedia, controller.updateMedia);
 router.delete('/:id', controller.deleteMedia);
 

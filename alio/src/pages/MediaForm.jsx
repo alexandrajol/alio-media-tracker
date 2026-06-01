@@ -9,7 +9,7 @@ export default function MediaForm() {
   const existingItem = id ? mediaItems.find(m => m.id === parseInt(id)) : null;
 
   const defaultState = {
-    title: '', type: 'Movie', genre: '', year: '', rating: '', review: '', watched: '',
+    title: '', type: 'Movie', genre: '', year: '', rating: '', review: '',
     posterUrl: '', director: '', author: '', duration: '', pages: '', seasons: ''
   };
   
@@ -44,14 +44,6 @@ export default function MediaForm() {
       newErrors.rating = 'Rating must be a number between 1 and 5.';
     }
 
-    // Date Watched Validation (DD.MM.YYYY)
-    if (formData.watched && formData.watched.trim() !== '') {
-      const dateRegex = /^(0[1-9]|[12][0-9]|3[01])\.(0[1-9]|1[012])\.\d{4}$/;
-      if (!dateRegex.test(formData.watched)) {
-        newErrors.watched = 'Must be a valid date (DD.MM.YYYY).';
-      }
-    }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -60,15 +52,11 @@ export default function MediaForm() {
     e.preventDefault();
     
     if (validateForm()) {
-      const finalPosterUrl = formData.posterUrl.trim() 
-        ? formData.posterUrl 
-        : `https://placehold.co/300x450/2b3035/ffffff?text=${encodeURIComponent(formData.title)}`;
-
       let finalData = {
         ...formData,
         year: parseInt(formData.year),
         rating: parseInt(formData.rating),
-        posterUrl: finalPosterUrl,
+        posterUrl: formData.posterUrl.trim(),
         id: existingItem ? existingItem.id : Date.now() 
       };
 
@@ -184,20 +172,13 @@ export default function MediaForm() {
             </div>
           )}
 
-          <div style={dynamicTwoColStyle}>
-            <div style={inputGroup}>
-              <label style={labelStyle}>Date Watched/Read</label>
-              <input name="watched" placeholder="DD.MM.YYYY" value={formData.watched || ''} onChange={handleChange} style={inputStyle} />
-              {errors.watched && <span style={errorTextStyle}>{errors.watched}</span>}
-            </div>
-            <div style={inputGroup}>
-              <label style={labelStyle}>Poster Image URL</label>
-              <input name="posterUrl" placeholder="https://..." value={formData.posterUrl || ''} onChange={handleChange} style={inputStyle} />
-            </div>
+          <div style={inputGroup}>
+            <label style={labelStyle}>Poster Image URL</label>
+            <input name="posterUrl" placeholder="https://..." value={formData.posterUrl || ''} onChange={handleChange} style={inputStyle} />
           </div>
 
           <div style={inputGroup}>
-            <label style={labelStyle}>Short Review</label>
+            <label style={labelStyle}>Description</label>
             <textarea name="review" value={formData.review || ''} onChange={handleChange} style={{...inputStyle, height: '80px', resize: 'none'}} />
           </div>
 

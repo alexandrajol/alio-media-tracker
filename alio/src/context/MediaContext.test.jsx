@@ -1,11 +1,12 @@
-import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { beforeEach, describe, it, expect, vi } from 'vitest';
 import React, { useContext } from 'react';
+import { AuthContext } from './AuthContext';
 import { MediaContext, MediaProvider } from './MediaContext';
 
 // 1. Create a dummy component to interact with the Context
 const DummyComponent = () => {
-  const { mediaItems, addMedia, updateMedia, deleteMedia } = useContext(MediaContext);
+  const { mediaItems, addMedia, updateMedia, updateMediaStatus, deleteMedia } = useContext(MediaContext);
 
   return (
     <div>
@@ -13,11 +14,14 @@ const DummyComponent = () => {
       <div data-testid="first-item-title">{mediaItems[0]?.title}</div>
       
       {/* Buttons to trigger our CRUD operations */}
-      <button onClick={() => addMedia({ title: 'New Test Movie', type: 'Movie' })}>
+      <button onClick={() => addMedia({ title: 'New Test Movie', type: 'Movie', rating: 4 })}>
         Create
       </button>
       <button onClick={() => updateMedia({ ...mediaItems[0], title: 'Updated Title' })}>
         Update
+      </button>
+      <button onClick={() => updateMediaStatus(mediaItems[0].id, true)}>
+        Mark Watched
       </button>
       <button onClick={() => deleteMedia(mediaItems[0].id)}>
         Delete
@@ -26,67 +30,119 @@ const DummyComponent = () => {
   );
 };
 
+const renderWithAuth = () => render(
+  <AuthContext.Provider value={{ token: 'test-token' }}>
+    <MediaProvider>
+      <DummyComponent />
+    </MediaProvider>
+  </AuthContext.Provider>
+);
+
 // 2. The Test Suite
 describe('MediaContext CRUD Operations', () => {
+  beforeEach(() => {
+    global.fetch = vi.fn((url, options = {}) => {
+      if (!options.method || options.method === 'GET') {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({
+            data: [{ id: 1, title: 'Dirty Dancing', type: 'Movie', rating: 5 }]
+          })
+        });
+      }
 
-  it('READ: Should provide initial mock data', () => {
-    render(
-      <MediaProvider>
-        <DummyComponent />
-      </MediaProvider>
-    );
+      if (options.method === 'POST') {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({
+            id: 2,
+            ...JSON.parse(options.body)
+          })
+        });
+      }
+
+      if (options.method === 'PUT') {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(JSON.parse(options.body))
+        });
+      }
+
+      if (options.method === 'PATCH') {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({
+            id: 1,
+            title: 'Dirty Dancing',
+            type: 'Movie',
+            rating: 5,
+            userStatus: 'Watched',
+            isCompleted: true,
+          })
+        });
+      }
+
+      if (options.method === 'DELETE') {
+        return Promise.resolve({ ok: true });
+      }
+
+      return Promise.reject(new Error(`Unhandled request: ${url}`));
+    });
+  });
+
+  it('READ: Should provide initial API data', async () => {
+    renderWithAuth();
     
-    // We expect the starting array to have items (15 items based on our mock data)
-    const countElement = screen.getByTestId('item-count');
-    expect(parseInt(countElement.textContent)).toBeGreaterThan(0);
+    await waitFor(() => expect(screen.getByTestId('item-count')).toHaveTextContent('1'));
     expect(screen.getByTestId('first-item-title')).toHaveTextContent('Dirty Dancing');
   });
 
-  it('CREATE: Should add a new item to the RAM state', () => {
-    render(
-      <MediaProvider>
-        <DummyComponent />
-      </MediaProvider>
-    );
+  it('CREATE: Should add a new item to the state after the API succeeds', async () => {
+    renderWithAuth();
     
+    await waitFor(() => expect(screen.getByTestId('item-count')).toHaveTextContent('1'));
     const initialCount = parseInt(screen.getByTestId('item-count').textContent);
     
-    // Click the Add button
     fireEvent.click(screen.getByText('Create'));
     
-    // The count should go up by 1
-    const newCount = parseInt(screen.getByTestId('item-count').textContent);
-    expect(newCount).toBe(initialCount + 1);
+    await waitFor(() => {
+      const newCount = parseInt(screen.getByTestId('item-count').textContent);
+      expect(newCount).toBe(initialCount + 1);
+    });
   });
 
-  it('UPDATE: Should modify an existing item', () => {
-    render(
-      <MediaProvider>
-        <DummyComponent />
-      </MediaProvider>
-    );
+  it('UPDATE: Should modify an existing item after the API succeeds', async () => {
+    renderWithAuth();
     
-    // Click the Update button
+    await waitFor(() => expect(screen.getByTestId('first-item-title')).toHaveTextContent('Dirty Dancing'));
     fireEvent.click(screen.getByText('Update'));
     
-    // The title of the first item should now be changed
-    expect(screen.getByTestId('first-item-title')).toHaveTextContent('Updated Title');
+    await waitFor(() => expect(screen.getByTestId('first-item-title')).toHaveTextContent('Updated Title'));
   });
 
-  it('DELETE: Should remove an item from the RAM state', () => {
-    render(
-      <MediaProvider>
-        <DummyComponent />
-      </MediaProvider>
-    );
+  it('STATUS: Should update the current user media status after the API succeeds', async () => {
+    renderWithAuth();
+
+    await waitFor(() => expect(screen.getByTestId('first-item-title')).toHaveTextContent('Dirty Dancing'));
+    fireEvent.click(screen.getByText('Mark Watched'));
+
+    await waitFor(() => expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/media/1/status'),
+      expect.objectContaining({ method: 'PATCH' })
+    ));
+  });
+
+  it('DELETE: Should remove an item after the API succeeds', async () => {
+    renderWithAuth();
     
+    await waitFor(() => expect(screen.getByTestId('item-count')).toHaveTextContent('1'));
     const initialCount = parseInt(screen.getByTestId('item-count').textContent);
     
-    // Click the Delete button
     fireEvent.click(screen.getByText('Delete'));
     
-    // The count should go down by 1
-    const newCount = parseInt(screen.getByTestId('item-count').textContent);
-    expect(newCount).toBe(initialCount - 1);
+    await waitFor(() => {
+      const newCount = parseInt(screen.getByTestId('item-count').textContent);
+      expect(newCount).toBe(initialCount - 1);
+    });
   });
 });

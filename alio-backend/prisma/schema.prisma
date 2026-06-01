@@ -4,19 +4,27 @@
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
   output   = "../src/generated/client"
+  moduleFormat = "cjs"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  username  String
-  medias    Media[]
+  id                 Int      @id @default(autoincrement())
+  email              String   @unique
+  username           String
+  passwordHash       String?
+  role               String   @default("USER")
+  sessionTokenHash   String?
+  sessionExpiresAt   DateTime?
+  lastActiveAt       DateTime?
+  medias             Media[]
+  mediaStatuses      UserMediaStatus[]
 }
 
 model Category {
@@ -34,7 +42,6 @@ model Media {
   year        Int?
   rating      Int?     
   review      String?  
-  watched     String?  
   posterUrl   String?
 
   // Movie / TV Show Specific Fields
@@ -52,4 +59,19 @@ model Media {
   
   categoryId  Int
   category    Category @relation(fields: [categoryId], references: [id])
+  userStatuses UserMediaStatus[]
+}
+
+model UserMediaStatus {
+  id        Int      @id @default(autoincrement())
+  status    String
+  updatedAt DateTime @updatedAt
+
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  mediaId   Int
+  media     Media    @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, mediaId])
 }

@@ -1,0 +1,10 @@
+.media-detail-action-btn {
+  transition: box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.media-detail-action-btn:hover {
+  background-color: #ffffff !important;
+  color: #ff6b81 !important;
+  box-shadow: 0 8px 18px rgba(255, 107, 129, 0.42);
+  transform: translateY(-1px);
+}
