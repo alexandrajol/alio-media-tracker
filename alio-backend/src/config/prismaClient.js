@@ -1,18 +1,25 @@
 const { PrismaClient } = require('../generated/client');
 
+// Check if we're using PostgreSQL (production) or SQLite (local development)
+const isPostgreSQL = process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('postgresql://');
+
 let prisma;
 
-// Check if we're using PostgreSQL (production) or SQLite (local development)
-if (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('postgresql://')) {
-  // PostgreSQL - no adapter needed
-  prisma = new PrismaClient();
+if (isPostgreSQL) {
+  // PostgreSQL (production) - no adapter needed, Prisma connects directly
+  prisma = new PrismaClient({
+    log: process.env.NODE_ENV === 'production' ? ['error', 'warn'] : ['query', 'info', 'warn', 'error'],
+  });
 } else {
-  // SQLite - use adapter
+  // SQLite (local development) - requires adapter
   const { PrismaBetterSqlite3 } = require('@prisma/adapter-better-sqlite3');
   const path = require('path');
   const dbPath = process.env.ALIO_DATABASE_PATH || path.join(__dirname, '../../dev.db');
   const adapter = new PrismaBetterSqlite3({ url: dbPath });
-  prisma = new PrismaClient({ adapter });
+  prisma = new PrismaClient({
+    adapter,
+    log: ['query', 'info', 'warn', 'error'],
+  });
 }
 
 module.exports = prisma;
